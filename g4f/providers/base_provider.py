@@ -411,7 +411,7 @@ class RaiseErrorMixin():
         if "status" in data and isinstance(data["status"], int):
             error_status = data["status"]
             # Only raise if it's an error status code (4xx or 5xx)
-            if error_status >= 400:
+            if 400 <= error_status < 600:
                 # Build error message from available fields
                 message_parts = []
                 if "title" in data:

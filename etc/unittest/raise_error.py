@@ -83,6 +83,24 @@ class TestRaiseError(unittest.TestCase):
             RaiseErrorMixin.raise_error(data)
         self.assertIn("401", str(cm.exception))
 
+    def test_status_string_does_not_raise(self):
+        """Test that status field as string is not treated as error (falls through)"""
+        data = {"status": "401"}
+        # Should not raise since status is not an integer
+        RaiseErrorMixin.raise_error(data)
+
+    def test_status_600_does_not_raise(self):
+        """Test that invalid status code 600+ is not treated as error"""
+        data = {"status": 600, "title": "Invalid", "detail": "Out of range"}
+        # Should not raise since 600 is not a valid HTTP status code
+        RaiseErrorMixin.raise_error(data)
+
+    def test_status_300_does_not_raise(self):
+        """Test that 3xx status codes don't raise errors"""
+        data = {"status": 301, "title": "Moved Permanently"}
+        # Should not raise since 3xx is not an error
+        RaiseErrorMixin.raise_error(data)
+
 
 if __name__ == '__main__':
     unittest.main()
