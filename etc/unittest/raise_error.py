@@ -82,12 +82,21 @@ class TestRaiseError(unittest.TestCase):
         with self.assertRaises(MissingAuthError) as cm:
             RaiseErrorMixin.raise_error(data)
         self.assertIn("401", str(cm.exception))
+        self.assertIn("Error occurred", str(cm.exception))
 
     def test_status_string_does_not_raise(self):
         """Test that status field as string is not treated as error (falls through)"""
         data = {"status": "401"}
         # Should not raise since status is not an integer
         RaiseErrorMixin.raise_error(data)
+
+    def test_status_string_with_error_field(self):
+        """Test that string status with error field falls back to error field handling"""
+        data = {"status": "401", "error": "Authentication required"}
+        # Should raise based on 'error' field since status is not an integer
+        with self.assertRaises(ResponseError) as cm:
+            RaiseErrorMixin.raise_error(data)
+        self.assertIn("Authentication required", str(cm.exception))
 
     def test_status_600_does_not_raise(self):
         """Test that invalid status code 600+ is not treated as error"""

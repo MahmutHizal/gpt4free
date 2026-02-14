@@ -418,7 +418,8 @@ class RaiseErrorMixin():
                     message_parts.append(data["title"])
                 if "detail" in data:
                     message_parts.append(data["detail"])
-                error_message = ": ".join(message_parts) if message_parts else str(data)
+                # Use generic message if no title/detail to avoid exposing sensitive data
+                error_message = ": ".join(message_parts) if message_parts else "Error occurred"
                 
                 # Raise appropriate exception based on status code
                 if error_status == 401:
