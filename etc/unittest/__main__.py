@@ -17,5 +17,6 @@ from .web_search import *
 from .models import *
 from .mcp import *
 from .tool_support_provider import *
+from .raise_error import *
 
 unittest.main()

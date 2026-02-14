@@ -20,7 +20,7 @@ from .asyncio import get_running_loop, to_sync_generator, to_async_iterator
 from .response import BaseConversation, AuthResult
 from .helper import concat_chunks
 from ..cookies import get_cookies_dir
-from ..errors import ModelNotFoundError, ResponseError, MissingAuthError, NoValidHarFileError, PaymentRequiredError, CloudflareError
+from ..errors import ModelNotFoundError, ResponseError, MissingAuthError, NoValidHarFileError, PaymentRequiredError, CloudflareError, RateLimitError
 from ..tools.auth import AuthManager
 from .. import debug
 
@@ -407,6 +407,29 @@ class RaiseErrorMixin():
 
     @staticmethod
     def raise_error(data: dict, status: int = None):
+        # Check if response body contains an error status code (e.g., {"status":401,"title":"...","detail":"..."})
+        if "status" in data and isinstance(data["status"], int):
+            error_status = data["status"]
+            # Only raise if it's an error status code (4xx or 5xx)
+            if error_status >= 400:
+                # Build error message from available fields
+                message_parts = []
+                if "title" in data:
+                    message_parts.append(data["title"])
+                if "detail" in data:
+                    message_parts.append(data["detail"])
+                error_message = ": ".join(message_parts) if message_parts else str(data)
+                
+                # Raise appropriate exception based on status code
+                if error_status == 401:
+                    raise MissingAuthError(f"Response {error_status}: {error_message}")
+                elif error_status == 402:
+                    raise PaymentRequiredError(f"Response {error_status}: {error_message}")
+                elif error_status == 429:
+                    raise RateLimitError(f"Response {error_status}: {error_message}")
+                else:
+                    raise ResponseError(f"Response {error_status}: {error_message}")
+        
         if "error_message" in data:
             raise ResponseError(data["error_message"])
         elif "error" in data:
